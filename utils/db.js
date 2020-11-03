@@ -13,18 +13,15 @@ module.exports = {
             name: 'Customer 3'
         }
     ],
-    products: [
-        {
-            id: 1,
+    products: {
+        ProductA: {
             name: 'Product 1'
         },
-        {
-            id: 2,
+        ProductB: {
             name: 'Product 2'
         },
-        {
-            id: 3,
+        ProductC: {
             name: 'Product 3'
-        }
-    ]
+        },
+    }
 }

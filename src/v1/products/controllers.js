@@ -12,7 +12,7 @@ exports.getAllProducts = (req, res) => {
 exports.getAProduct = (req, res) => {
     const { id } = req.params;
     try {
-        const product = dbManager.findById('products', id);
+        const product = dbManager.findByElement('products', id);
         res.status(200).json(product);
     } catch (error) {
         if (error.includes && error.includes('NOT_FOUND:')) {
@@ -24,14 +24,14 @@ exports.getAProduct = (req, res) => {
 };
 
 exports.createAProduct = (req, res) => {
-    const id = dbManager.getAll('products').length + 1;
+    const id = `Product${Object.keys(dbManager.getAll('products')).length + 1}`;
     const { name } = req.body;
     const product = {
         id,
         name
     };
     try {
-        dbManager.createOne('products', product);
+        dbManager.createElement('products', id, product);
         res.status(201).json(product);
     } catch (error) {
         res.status(500).send(error);
@@ -41,7 +41,7 @@ exports.createAProduct = (req, res) => {
 exports.updateAProduct = (req, res) => {
     const { id } = req.params;
     try {
-        const product = dbManager.updateById('products', id, req.body);
+        const product = dbManager.updateByElement('products', id, req.body);
         res.status(200).json(product);
     } catch (error) {
         if (error.includes && error.includes('NOT_FOUND:')) {
@@ -55,7 +55,7 @@ exports.updateAProduct = (req, res) => {
 exports.deleteAProduct = (req, res) => {
     const { id } = req.params;
     try {
-        dbManager.deleteById('products', id);
+        dbManager.deleteByElement('products', id);
         res.status(200).send();
     } catch (error) {
         if (error.includes && error.includes('NOT_FOUND:')) {
