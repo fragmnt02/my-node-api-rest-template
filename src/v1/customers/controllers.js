@@ -1,67 +1,52 @@
-const dbManager = require('../../../utils/dbManager');
+const { Customer } = require('../../../utils/models/Customer');
 
-exports.getAllCustomers = (req, res) => {
-    try {
-        const customers = dbManager.getAll('customers');
+exports.getAllCustomers = async (req, res) => {
+    Customer.find({}, (err, customers) => {
+        if (err) {
+            res.status(400).json(err);
+        }
         res.status(200).json(customers);
-    } catch (error) {
-        res.status(500).send(error);
-    }
+    }).exec();
 }
 
-exports.getACustomer = (req, res) => {
-    const { id } = req.params;
-    try {
-        const customer = dbManager.findById('customers', id);
-        res.status(200).json(customer);
-    } catch (error) {
-        if (error.includes && error.includes('NOT_FOUND:')) {
-            res.status(404).send();
-        } else {
-            res.status(500).send(error);
-        }
-    }
+exports.getACustomer = async (req, res) => {
+    let { id } = req.params;
+    Customer.findById(id, (err, customer) => {
+        callback(err, customer, res);
+    }).exec();
 };
 
-exports.createACustomer = (req, res) => {
-    const id = dbManager.getAll('customers').length + 1;
-    const { name } = req.body;
-    const customer = {
-        id,
-        name
-    };
-    try {
-        dbManager.createOne('customers', customer);
-        res.status(201).json(customer);
-    } catch (error) {
-        res.status(500).send(error);
-    }
+exports.createACustomer = async (req, res) => {
+    Customer.create(req.body).then((customer) => {
+        res.status(201).json(customer.toJSON());
+    }).catch(err => {
+        res.status(400).json(err);
+    });
 };
 
-exports.updateACustomer = (req, res) => {
+exports.updateACustomer = async (req, res) => {
     const { id } = req.params;
-    try {
-        const customer = dbManager.updateById('customers', id, req.body);
-        res.status(200).json(customer);
-    } catch (error) {
-        if (error.includes && error.includes('NOT_FOUND:')) {
-            res.status(404).send();
-        } else {
-            res.status(500).send(error);
-        }
-    }
+    Customer.findByIdAndUpdate(id, req.body, { new: true }, (err, customer) => {
+        callback(err, customer, res);
+    }).exec();
 };
 
-exports.deleteACustomer = (req, res) => {
+exports.deleteACustomer = async (req, res) => {
     const { id } = req.params;
-    try {
-        dbManager.deleteById('customers', id);
+    Customer.findByIdAndDelete(id, { useFindAndModify: true }).exec().then(() => {
         res.status(200).send();
-    } catch (error) {
-        if (error.includes && error.includes('NOT_FOUND:')) {
-            res.status(404).send();
-        } else {
-            res.status(500).send(error);
-        }
-    }
+    }).catch((err) => {
+        res.status(400).json(err);
+    });
 };
+
+const callback = (err, customer, res) => {
+    if (!customer) {
+        return res.status(404).send();
+    } else {
+        if (err) {
+            res.status(400).json(err);
+        }
+        res.status(200).json(customer.toJSON());
+    }
+}

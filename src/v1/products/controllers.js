@@ -1,67 +1,51 @@
-const dbManager = require('../../../utils/dbManager');
-
+const { Product } = require('../../../utils/models/Product');
 exports.getAllProducts = (req, res) => {
-    try {
-        const products = dbManager.getAll('products');
+    Product.find({}, (err, products) => {
+        if (err) {
+            res.status(400).json(err);
+        }
         res.status(200).json(products);
-    } catch (error) {
-        res.status(500).send(error);
-    }
+    }).exec();
 }
 
 exports.getAProduct = (req, res) => {
-    const { id } = req.params;
-    try {
-        const product = dbManager.findByElement('products', id);
-        res.status(200).json(product);
-    } catch (error) {
-        if (error.includes && error.includes('NOT_FOUND:')) {
-            res.status(404).send();
-        } else {
-            res.status(500).send(error);
-        }
-    }
+    let { id } = req.params;
+    Product.findById(id, (err, product) => {
+        callback(err, product, res);
+    }).exec();
 };
 
 exports.createAProduct = (req, res) => {
-    const id = `Product${Object.keys(dbManager.getAll('products')).length + 1}`;
-    const { name } = req.body;
-    const product = {
-        id,
-        name
-    };
-    try {
-        dbManager.createElement('products', id, product);
-        res.status(201).json(product);
-    } catch (error) {
-        res.status(500).send(error);
-    }
+    Product.create(req.body).then((product) => {
+        res.status(201).json(product.toJSON());
+    }).catch(err => {
+        res.status(400).json(err);
+    });
 };
 
 exports.updateAProduct = (req, res) => {
     const { id } = req.params;
-    try {
-        const product = dbManager.updateByElement('products', id, req.body);
-        res.status(200).json(product);
-    } catch (error) {
-        if (error.includes && error.includes('NOT_FOUND:')) {
-            res.status(404).send();
-        } else {
-            res.status(500).send(error);
-        }
-    }
+    Product.findByIdAndUpdate(id, req.body, { new: true }, (err, product) => {
+        callback(err, product, res);
+    }).exec();
 };
 
 exports.deleteAProduct = (req, res) => {
     const { id } = req.params;
-    try {
-        dbManager.deleteByElement('products', id);
+    Product.findByIdAndDelete(id, { useFindAndModify: true }).exec().then(() => {
         res.status(200).send();
-    } catch (error) {
-        if (error.includes && error.includes('NOT_FOUND:')) {
-            res.status(404).send();
-        } else {
-            res.status(500).send(error);
-        }
-    }
+    }).catch((err) => {
+        res.status(400).json(err);
+    });
 };
+
+const callback = (err, product, res) => {
+    if (!product) {
+        return res.status(404).send();
+    } else {
+        if (err) {
+            res.status(400).json(err);
+        }
+        res.status(200).json(product.toJSON());
+    }
+}
